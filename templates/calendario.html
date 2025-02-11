@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendário Interativo</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Calendário</h2>
+        <div class="calendar">
+            <div class="month">
+                <button id="prev">&lt;</button>
+                <h3 id="month-year"></h3>
+                <button id="next">&gt;</button>
+            </div>
+            <div class="weekdays">
+                <span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span>
+            </div>
+            <div class="days" id="days"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+    <script>
+    document.addEventListener("click", (event) => {
+        if (event.target.parentElement.id === "days") {
+        let selectedDate = `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${event.target.innerText}`;
+        let eventText = prompt("Adicionar evento:");
+        
+          if (eventText) {
+            fetch("/add_event", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ date: selectedDate, event: eventText })
+            }).then(response => response.json())
+              .then(data => alert(data.message));
+          }
+        }
+    });
+
+    </script>
+</html>
