@@ -11,55 +11,51 @@ button {
     color:black;
 }
 
-
-.container {
-    width: 300px;
-    margin: auto;
-    padding: 20px;
-    background: #f4f4f4;
-    border-radius: 10px;
-    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-}
-
-.calendar {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.month {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-    align-items: center;
-}
-
-button {
-    background: #3498db;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    cursor: pointer;
-    border-radius: 5px;
-}
-
-.weekdays, .days {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 5px;
-}
-
-.weekdays span, .days div {
-    padding: 10px;
-    text-align: center;
-}
-
-.days div {
+#calendar {
+    max-width: 900px;
+    margin: 0 auto;
     background: white;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.fc-toolbar {
+    background: #1277e2;
+    color: white;
     border-radius: 5px;
+    padding: 10px;
+}
+
+.fc-button {
+    background: #0450a0 !important;
+    border: none !important;
+    color: white !important;
+    border-radius: 5px !important;
+    padding: 5px 10px !important;
+}
+
+.fc-button:hover {
+    background: #0056b3 !important;
+}
+
+.fc-daygrid-day {
     cursor: pointer;
 }
 
-.days div:hover {
-    background: #ddd;
+.fc-day-today {
+    background: rgba(0, 123, 255, 0.1) !important;
+    border-radius: 5px;
+}
+
+.fc-event {
+    background: #28a745 !important;
+    border: none !important;
+    padding: 5px;
+    border-radius: 5px !important;
+    font-size: 14px;
+}
+
+.fc-event:hover {
+    background: #218838 !important;
 }

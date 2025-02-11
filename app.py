@@ -1,5 +1,6 @@
 from flask import Flask, request, render_template, redirect, url_for, jsonify, session
-from bd import db, Usuario  # Importa o banco e o modelo
+from werkzeug.security import generate_password_hash, check_password_hash
+from bd import db, Usuario, Evento  # Importa o banco, o modelo e o evento(calendario)
 
 app = Flask(__name__)
 
@@ -17,6 +18,7 @@ def set_session():
 
 @app.route('/get_session')
 def get_session():
+    print(session) #terminal
     usuario = session.get('usuario', 'Usuário não logado')
     return f"Usuário na sessão: {usuario}"
 
@@ -35,6 +37,10 @@ db.init_app(app)  # Inicializa o banco com o Flask
 def home():
     return render_template("home.html")
 
+@app.route("/calendario")
+def calendario():
+    return render_template("calendario.html")
+
 @app.route("/cadastrar", methods=["POST"])
 def cadastrar():
     nome = request.form.get("nome")
@@ -47,7 +53,7 @@ def cadastrar():
     
     senha_hash = generate_password_hash(senha)  
 
-    novo_usuario = Usuario(nome=nome, email=email, senha=senha, telefone=telefone)
+    novo_usuario = Usuario(nome=nome, email=email, senha=senha_hash, telefone=telefone)
     
     try:
         db.session.add(novo_usuario)
@@ -66,9 +72,13 @@ def logar():
     # Verifica se o usuário existe no banco
     usuario = Usuario.query.filter_by(email=email).first()
 
-    if usuario and usuario.senha == senha:  # Aqui seria ideal usar hash para senhas!
+    if usuario and check_password_hash(usuario.senha, senha):  # Aqui seria ideal usar hash para senhas!
         session["usuario_id"] = usuario.id  # Guarda o ID do usuário na sessão
         session["usuario_nome"] = usuario.nome
+
+        # Exibe a sessão no terminal para depuração
+        print("Sessão criada:", session)
+        
         return redirect(url_for("calendario"))  # Redireciona para o calendário
     else:
         return "Email ou senha inválidos!", 401
@@ -77,27 +87,51 @@ def logar():
 with app.app_context():
     db.create_all()
 
-#Rota do calendário
+# Rota para adicionar evento ao banco
 @app.route("/add_event", methods=["POST"])
 def add_event():
-    data = request.json
-    date = data["date"]
-    event = data["event"]
+    if "usuario_id" not in session:
+        return jsonify({"error": "Acesso negado! Faça login primeiro."}), 403
     
-    if date in eventos:
-        eventos[date].append(event)
-    else:
-        eventos[date] = [event]
+    data = request.json
+    novo_evento = Evento(
+        titulo=data["event"],
+        data=data["date"],
+        usuario_id=session["usuario_id"]
+    )
+
+    db.session.add(novo_evento)
+    db.session.commit()
     
     return jsonify({"message": "Evento adicionado!"})
 
-# Rota para obter eventos de uma data específica
-@app.route("/get_events/<date>")
-def get_events(date):
+# Rota para obter eventos do usuário logado
+@app.route("/get_events")
+def get_events():
     if "usuario_id" not in session:
         return jsonify({"error": "Acesso negado! Faça login primeiro."}), 403
 
-    return jsonify({"events": eventos.get(date, [])})
+    eventos = Evento.query.filter_by(usuario_id=session["usuario_id"]).all()
+    eventos_json = [{"id": e.id, "title": e.titulo, "start": e.data} for e in eventos]
+
+    return jsonify(eventos_json)
+
+# Rota para excluir evento
+@app.route("/delete_event", methods=["POST"])
+def delete_event():
+    if "usuario_id" not in session:
+        return jsonify({"error": "Acesso negado! Faça login primeiro."}), 403
+
+    data = request.json
+    evento = Evento.query.filter_by(id=data["event_id"], usuario_id=session["usuario_id"]).first()
+
+    if not evento:
+        return jsonify({"error": "Evento não encontrado!"}), 404
+
+    db.session.delete(evento)
+    db.session.commit()
+
+    return jsonify({"message": "Evento removido!"})
 
 if __name__ == "__main__":
     app.run(debug=True)
